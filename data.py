@@ -1,5 +1,46 @@
 import numpy as np
 from sklearn import tree
+from sklearn.model_selection import train_test_split
+
+MISSING_VALUE = "N/A"
+
+def addTransaction(transactionData, trainFeatureMatrix):
+    gender = transactionData[0]
+    age = transactionData[1]
+    occupation = transactionData[2]
+    year = transactionData[3]
+    genre = transactionData[4]
+
+    # Convert male/female to binary value
+    if gender == "M":
+        gender = 1
+    elif gender == "F":
+        gender = 0
+    else:
+        gender = -1
+
+    if age == MISSING_VALUE:
+        age = -1
+    else:
+        age = int(age)
+
+    if occupation == MISSING_VALUE:
+        occupation = -1
+    else:
+        occupation = int(occupation)
+
+    if year == MISSING_VALUE:
+        year = -1
+    else:
+        year = int(year)
+
+    # For now, just put a hash value of the genre string
+    if genre == MISSING_VALUE:
+        genre = -1
+    else:
+        genre = hash(genre) % 10**8
+
+    trainFeatureMatrix.append([gender, age, occupation, year, genre])
 
 
 moviesData = {}
@@ -18,25 +59,38 @@ with open('user.txt', 'r') as users:
         userID = userData[0]
         usersData[userID] = userData[1:]
 
-trainFeatureData = [[]]
+trainFeatureMatrix = [[]]
 trainLabels = []
 with open('train.txt', 'r') as trainData:
     next(trainData)
     for transaction in trainData:
         transactionData = transaction.strip('\n').split(',')
         trainLabel = transactionData[3]
+        trainLabels.append(trainLabel)
+
         transactionMovieData = moviesData[transactionData[2]]
         transactionUserData = usersData[transactionData[1]]
-
-        trainLabels.append(trainLabel)
-        trainFeatureData.append(transactionUserData + transactionMovieData)
+        addTransaction(transactionUserData + transactionMovieData, trainFeatureMatrix)
+        # trainFeatureMatrix.append(transactionUserData + transactionMovieData)
 # Delete the header line
-trainFeatureData.pop(0)
+trainFeatureMatrix.pop(0)
+
+train, test, train_labels, test_labels = train_test_split(trainFeatureMatrix, trainLabels, test_size=0.2)
 
 clf = tree.DecisionTreeClassifier()
-clf.fit(trainFeatureData, trainLabels)
+clf.fit(train, train_labels)
 
-# print trainFeatureData[0]
+pred_test_labels = clf.predict(test)
+
+accuracy_count = 0
+for label in pred_test_labels:
+
+print(len(pred_test_labels))
+print(pred_test_labels[0])
+
+
+
+# print trainFeatureMatrix[0]
 # print trainLabels[0]
 
 # users = open('user.txt', 'r')
