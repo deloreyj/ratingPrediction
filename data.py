@@ -85,31 +85,31 @@ dt = tree.DecisionTreeClassifier()
 dt.fit(train, train_labels)
 dt_score = dt.score(test, test_labels)
 
-print "Accuracy of Decision Tree classifier: ", dt_score, "%"
+print "Accuracy of Decision Tree classifier: ", dt_score
 
 rf = RandomForestClassifier()
 rf.fit(train, train_labels)
 rf_score = rf.score(test, test_labels)
 
-print "Accuracy of Random Forest classifier: ", rf_score, "%"
+print "Accuracy of Random Forest classifier: ", rf_score
 
 gnb = GaussianNB()
 gnb.fit(train, train_labels)
 gnb_score = gnb.score(test, test_labels)
 
-print "Accuracy of Gaussian Naive Bayes classifier: ", gnb_score, "%"
+print "Accuracy of Gaussian Naive Bayes classifier: ", gnb_score
 
 bnb = BernoulliNB()
 bnb.fit(train, train_labels)
 bnb_score = bnb.score(test, test_labels)
 
-print "Accuracy of Bernoulli Naive Bayes classifier: ", bnb_score, "%"
+print "Accuracy of Bernoulli Naive Bayes classifier: ", bnb_score
 
 knn = KNeighborsClassifier(n_neighbors=5)
 knn.fit(train, train_labels)
 knn_score = knn.score(test, test_labels)
 
-print "Accuracy of K Nearest Neighbors classifier: ", knn_score, "%"
+print "Accuracy of K Nearest Neighbors classifier: ", knn_score
 
 
 # print trainFeatureMatrix[0]
