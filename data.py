@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 MISSING_VALUE = "N/A"
 
-def addTransaction(transactionData, trainFeatureMatrix):
+def addTransaction(transactionData, trainFeatureMatrix, uniqGenres):
     gender = transactionData[0]
     age = transactionData[1]
     occupation = transactionData[2]
@@ -27,7 +27,6 @@ def addTransaction(transactionData, trainFeatureMatrix):
         age = -1
     else:
         age = int(age)
-
     if occupation == MISSING_VALUE:
         occupation = -1
     else:
@@ -40,24 +39,27 @@ def addTransaction(transactionData, trainFeatureMatrix):
 
     # For now, just put a hash value of the genre string
     if genre == MISSING_VALUE:
-        genre = -1
+        genre = [0] * len(uniqGenres)
     else:
-        genre = hash(genre) % 10**8
+        genre = [1 if x in genre else 0 for x in uniqGenres]
 
-    trainFeatureMatrix.append([gender, age, occupation, year, genre])
+    trainFeatureMatrix.append([gender, age, occupation, year] + genre)
 
 
 moviesData = {}
-
+genreSet = set()
 with open('movie.txt', 'r') as movies:
+    next(movies)
     for movie in movies:
         movieData = movie.strip('\n').split(',')
         movieID = movieData[0]
         moviesData[movieID] = movieData[1:]
+        genreSet.update(movieData[-1].split('|'))
 
 usersData = {}
 
 with open('user.txt', 'r') as users:
+    next(users)
     for user in users:
         userData = user.strip('\n').split(',')
         userID = userData[0]
@@ -65,6 +67,7 @@ with open('user.txt', 'r') as users:
 
 trainFeatureMatrix = [[]]
 trainLabels = []
+uniqGenres = list(genreSet)
 with open('train.txt', 'r') as trainData:
     next(trainData)
     for transaction in trainData:
@@ -74,7 +77,7 @@ with open('train.txt', 'r') as trainData:
 
         transactionMovieData = moviesData[transactionData[2]]
         transactionUserData = usersData[transactionData[1]]
-        addTransaction(transactionUserData + transactionMovieData, trainFeatureMatrix)
+        addTransaction(transactionUserData + transactionMovieData, trainFeatureMatrix, uniqGenres)
         # trainFeatureMatrix.append(transactionUserData + transactionMovieData)
 # Delete the header line
 trainFeatureMatrix.pop(0)
