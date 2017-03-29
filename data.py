@@ -1,6 +1,10 @@
 import numpy as np
 from sklearn import tree
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.neighbors import KNeighborsClassifier
 
 MISSING_VALUE = "N/A"
 
@@ -77,17 +81,35 @@ trainFeatureMatrix.pop(0)
 
 train, test, train_labels, test_labels = train_test_split(trainFeatureMatrix, trainLabels, test_size=0.2)
 
-clf = tree.DecisionTreeClassifier()
-clf.fit(train, train_labels)
+dt = tree.DecisionTreeClassifier()
+dt.fit(train, train_labels)
+dt_score = dt.score(test, test_labels)
 
-pred_test_labels = clf.predict(test)
+print "Accuracy of Decision Tree classifier: ", dt_score, "%"
 
-accuracy_count = 0
-for label in pred_test_labels:
+rf = RandomForestClassifier()
+rf.fit(train, train_labels)
+rf_score = rf.score(test, test_labels)
 
-print(len(pred_test_labels))
-print(pred_test_labels[0])
+print "Accuracy of Random Forest classifier: ", rf_score, "%"
 
+gnb = GaussianNB()
+gnb.fit(train, train_labels)
+gnb_score = gnb.score(test, test_labels)
+
+print "Accuracy of Gaussian Naive Bayes classifier: ", gnb_score, "%"
+
+bnb = BernoulliNB()
+bnb.fit(train, train_labels)
+bnb_score = bnb.score(test, test_labels)
+
+print "Accuracy of Bernoulli Naive Bayes classifier: ", bnb_score, "%"
+
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(train, train_labels)
+knn_score = knn.score(test, test_labels)
+
+print "Accuracy of K Nearest Neighbors classifier: ", knn_score, "%"
 
 
 # print trainFeatureMatrix[0]
