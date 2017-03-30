@@ -1,0 +1,10 @@
+Accuracy of Decision Tree classifier:  0.326339004803
+Cross-Validated Accuracy of Decision Tree: 0.32 (+/- 0.00)
+Accuracy of Random Forest classifier:  0.336051734772
+Cross-Validated Accuracy of Random Forest: 0.32 (+/- 0.00)
+Accuracy of Gaussian Naive Bayes classifier:  0.285525602607
+Cross-Validated Accuracy of Gaussian Naive Bayes: 0.29 (+/- 0.01)
+Accuracy of Bernoulli Naive Bayes classifier:  0.348630311941
+Cross-Validated Accuracy of Bernoulli Naive Bayes: 0.35 (+/- 0.00)
+Accuracy of K Nearest Neighbors classifier:  0.315940963548
+Cross-Validated Accuracy of K Nearest Neighbors: 0.31 (+/- 0.00)

@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score
 
 MISSING_VALUE = "N/A"
 
@@ -37,13 +38,38 @@ def addTransaction(transactionData, trainFeatureMatrix, uniqGenres):
     else:
         year = int(year)
 
-    # For now, just put a hash value of the genre string
     if genre == MISSING_VALUE:
         genre = [0] * len(uniqGenres)
     else:
         genre = [1 if x in genre else 0 for x in uniqGenres]
 
     trainFeatureMatrix.append([gender, age, occupation, year] + genre)
+
+def extractDataAndLabels(filename, usersData, moviesData, uniqGenres):
+    featureMatrix = [[]]
+    labels = []
+    testIds = []
+    with open(filename, 'r') as dataset:
+        next(dataset)
+        for transaction in dataset:
+            transactionData = transaction.strip('\n').split(',')
+            if filename == "train.txt":
+                label = transactionData[3]
+                labels.append(label)
+            else:
+                testId = transactionData[0]
+                testIds.append(testId)
+
+            transactionMovieData = moviesData[transactionData[2]]
+            transactionUserData = usersData[transactionData[1]]
+            addTransaction(transactionUserData + transactionMovieData, featureMatrix, uniqGenres)
+    # Delete the header line
+    featureMatrix.pop(0)
+
+    if filename == "train.txt":
+        return featureMatrix, labels
+    else:
+        return featureMatrix, testIds
 
 
 moviesData = {}
@@ -65,87 +91,72 @@ with open('user.txt', 'r') as users:
         userID = userData[0]
         usersData[userID] = userData[1:]
 
-trainFeatureMatrix = [[]]
-trainLabels = []
-uniqGenres = list(genreSet)
-with open('train.txt', 'r') as trainData:
-    next(trainData)
-    for transaction in trainData:
-        transactionData = transaction.strip('\n').split(',')
-        trainLabel = transactionData[3]
-        trainLabels.append(trainLabel)
+trainFeatureMatrix, trainLabels = extractDataAndLabels('train.txt', usersData, moviesData, list(genreSet))
 
-        transactionMovieData = moviesData[transactionData[2]]
-        transactionUserData = usersData[transactionData[1]]
-        addTransaction(transactionUserData + transactionMovieData, trainFeatureMatrix, uniqGenres)
-        # trainFeatureMatrix.append(transactionUserData + transactionMovieData)
-# Delete the header line
-trainFeatureMatrix.pop(0)
+train_split, test_split, train_split_labels, test_split_labels = train_test_split(trainFeatureMatrix, trainLabels, test_size=0.2)
 
-train, test, train_labels, test_labels = train_test_split(trainFeatureMatrix, trainLabels, test_size=0.2)
-
+# Decision Tree
 dt = tree.DecisionTreeClassifier()
-dt.fit(train, train_labels)
-dt_score = dt.score(test, test_labels)
-
+dt.fit(train_split, train_split_labels)
+dt_score = dt.score(test_split, test_split_labels)
 print "Accuracy of Decision Tree classifier: ", dt_score
 
-rf = RandomForestClassifier()
-rf.fit(train, train_labels)
-rf_score = rf.score(test, test_labels)
+cv_dt = tree.DecisionTreeClassifier()
+cv_dt_scores = cross_val_score(cv_dt, trainFeatureMatrix, trainLabels, cv=5)
+print("Cross-Validated Accuracy of Decision Tree: %0.2f (+/- %0.2f)" % (cv_dt_scores.mean(), cv_dt_scores.std() * 2))
 
+# Random Forest
+rf = RandomForestClassifier()
+rf.fit(train_split, train_split_labels)
+rf_score = rf.score(test_split, test_split_labels)
 print "Accuracy of Random Forest classifier: ", rf_score
 
-gnb = GaussianNB()
-gnb.fit(train, train_labels)
-gnb_score = gnb.score(test, test_labels)
+cv_rf = tree.DecisionTreeClassifier()
+cv_rf_scores = cross_val_score(cv_rf, trainFeatureMatrix, trainLabels, cv=5)
+print("Cross-Validated Accuracy of Random Forest: %0.2f (+/- %0.2f)" % (cv_rf_scores.mean(), cv_rf_scores.std() * 2))
 
+# Gaussian Naive Bayes
+gnb = GaussianNB()
+gnb.fit(train_split, train_split_labels)
+gnb_score = gnb.score(test_split, test_split_labels)
 print "Accuracy of Gaussian Naive Bayes classifier: ", gnb_score
 
-bnb = BernoulliNB()
-bnb.fit(train, train_labels)
-bnb_score = bnb.score(test, test_labels)
+cv_gnb = GaussianNB()
+cv_gnb_scores = cross_val_score(cv_gnb, trainFeatureMatrix, trainLabels, cv=5)
+print("Cross-Validated Accuracy of Gaussian Naive Bayes: %0.2f (+/- %0.2f)" % (cv_gnb_scores.mean(), cv_gnb_scores.std() * 2))
 
+# Bernoulli Naive Bayes
+bnb = BernoulliNB()
+bnb.fit(train_split, train_split_labels)
+bnb_score = bnb.score(test_split, test_split_labels)
 print "Accuracy of Bernoulli Naive Bayes classifier: ", bnb_score
 
-knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(train, train_labels)
-knn_score = knn.score(test, test_labels)
+cv_bnb = BernoulliNB()
+cv_bnb_scores = cross_val_score(cv_bnb, trainFeatureMatrix, trainLabels, cv=5)
+print("Cross-Validated Accuracy of Bernoulli Naive Bayes: %0.2f (+/- %0.2f)" % (cv_bnb_scores.mean(), cv_bnb_scores.std() * 2))
 
+# K Nearest Neighbors
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(train_split, train_split_labels)
+knn_score = knn.score(test_split, test_split_labels)
 print "Accuracy of K Nearest Neighbors classifier: ", knn_score
 
+cv_knn = KNeighborsClassifier(n_neighbors=5)
+cv_knn_scores = cross_val_score(cv_knn, trainFeatureMatrix, trainLabels, cv=5)
+print("Cross-Validated Accuracy of K Nearest Neighbors: %0.2f (+/- %0.2f)" % (cv_knn_scores.mean(), cv_knn_scores.std() * 2))
 
-# print trainFeatureMatrix[0]
-# print trainLabels[0]
+testFeatureMatrix, testIds = extractDataAndLabels('test.txt', usersData, moviesData, list(genreSet))
+
+# For now, just output test results using Decision Tree Classifier
+predTestLabels = dt.predict(testFeatureMatrix)
+
+testOutput = open('testOutput.txt', 'w')
+testOutput.write("Id,rating\n")
+for testId, label in zip(testIds, predTestLabels):
+    testOutput.write("{},{}\n".format(testId, label))
+testOutput.close()
 
 # users = open('user.txt', 'r')
-
-# movieMatrix = np.fromfile('movie.txt', dtype=float, count=-1, sep=",")
-# movieData = np.genfromtxt('movie.txt', dtype=None, delimiter=",", skiprows=1)
-# userData = np.genfromtxt('user.txt', dtype=None, delimiter=",", skiprows=1)
-# print tuserData[0]
-# print np.asarray(userData)
-
-# with open('train.txt', 'r') as train_data:
-#     for transaction in train_data:
-#         movieData = movie.strip('\n').split(',')
-
-# movieMatrix = [[]]
-#
-# moviesLength = 0
-#
-# with open('movie.txt', 'r') as movies:
-#     for movie in movies:
-#         movieData = movie.strip('\n').split(',')
-#         movieMatrix.append(movieData[1:])
-#
-# movieMatrix.pop(0)
-#
-# print movieMatrix[0]
-# print movieMatrix[1]
-
-# movies.close()
-
 
 # for movie in movies:
 #     moviesLength += 1
@@ -165,8 +176,3 @@ print "Accuracy of K Nearest Neighbors classifier: ", knn_score
 # print 'LIST LENGTH >>>>>: %s' % moviesLength
 # print 'EMPTY YEARS >>>>>: %s, %s%%' % (movieDict['year']['N/A'], int(movieDict['year']['N/A']/float(moviesLength - 1) * 100))
 # print 'EMPTY GENRES >>>>>: %s, %s%%' % (movieDict['genre']['N/A'], int(movieDict['genre']['N/A']/float(moviesLength - 1) * 100))
-#
-# w, h = 8, 5;
-# num_features =
-# num_train_samples =
-# Matrix = [[0 for x in range(w)] for y in range(h)]
