@@ -177,8 +177,8 @@ cv_knn_scores = cross_val_score(cv_knn, trainFeatureMatrix, trainLabels, cv=5)
 print("Cross-Validated Accuracy of K Nearest Neighbors: %0.2f (+/- %0.2f)" % (cv_knn_scores.mean(), cv_knn_scores.std() * 2))
 
 
-# For now, output the test labels using CV Decision Tree Classifier
-predTestLabels = dt.predict(testFeatureMatrix)
+# For now, output the test labels using a Bernoulli Naive Bayes Classifier
+predTestLabels = bnb.predict(testFeatureMatrix)
 
 testOutput = open('testOutput.txt', 'w')
 testOutput.write("Id,rating\n")
