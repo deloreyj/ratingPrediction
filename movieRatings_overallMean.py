@@ -250,6 +250,8 @@ overallMeans['occupation'] = computeDictAverage(overallCounts['occupation'].iter
 overallMeans['year'] = computeDictAverage(overallCounts['year'].iteritems())
 overallMeans['genre'] = computeGenreAverage(overallCounts['genre'].iteritems())
 
+# print overallMeans
+
 # for i in range(5):
 #     labelCounts[i]['gender'].pop('N/A', None)
 #     labelCounts[i]['age'].pop('N/A', None)
