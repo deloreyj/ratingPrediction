@@ -153,7 +153,7 @@ with open('movie.txt', 'r') as movies:
 
 # Read the users file and store a dictionary of the features
 usersData = {}
-with open('user.txt', 'r') as users:
+with open('userOutput.txt', 'r') as users:
     next(users)
     for user in users:
         userData = user.strip('\n').split(',')
