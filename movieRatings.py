@@ -52,7 +52,7 @@ def addTransaction(transactionData, featureMatrix, uniqGenres):
     if year == MISSING_VALUE:
         year = -1
     else:
-        year = int(year)
+        year = normalizeYear(int(year))
 
     # For all possible genres, fill in a 1 if a movie contains that genre
     if genre == MISSING_VALUE:
@@ -93,6 +93,9 @@ def extractDataAndLabels(filename, usersData, moviesData, uniqGenres):
     else:
         return featureMatrix, testIds
 
+def normalizeYear(year):
+    return float(year - minYear)/float(maxYear - minYear)
+
 """
     Main Function
 """
@@ -100,17 +103,26 @@ def extractDataAndLabels(filename, usersData, moviesData, uniqGenres):
 # Read the movies file and store a dictionary of the features
 moviesData = {}
 genreSet = set()
+maxYear = 0
+minYear = 9999
 with open('movie.txt', 'r') as movies:
     next(movies)
     for movie in movies:
         movieData = movie.strip('\n').split(',')
         movieID = movieData[0]
+        if movieData[1] != MISSING_VALUE:
+            year = int(movieData[1])
+            if year > maxYear:
+                maxYear = year
+            if year < minYear:
+                minYear = year
         moviesData[movieID] = movieData[1:]
         genreSet.update(movieData[-1].split('|'))
 
+
 # Read the users file and store a dictionary of the features
 usersData = {}
-with open('user.txt', 'r') as users:
+with open('userOutput.txt', 'r') as users:
     next(users)
     for user in users:
         userData = user.strip('\n').split(',')
@@ -127,54 +139,54 @@ train_split, test_split, train_split_labels, test_split_labels = train_test_spli
 Train the classifiers on a single split of the training data and compute accuracy
 """
 
-dt = tree.DecisionTreeClassifier()
-dt.fit(train_split, train_split_labels)
-dt_score = dt.score(test_split, test_split_labels)
-print "Accuracy of Decision Tree classifier: ", dt_score
+# dt = tree.DecisionTreeClassifier()
+# dt.fit(train_split, train_split_labels)
+# dt_score = dt.score(test_split, test_split_labels)
+# print "Accuracy of Decision Tree classifier: ", dt_score
 
-rf = RandomForestClassifier()
-rf.fit(train_split, train_split_labels)
-rf_score = rf.score(test_split, test_split_labels)
-print "Accuracy of Random Forest classifier: ", rf_score
+# rf = RandomForestClassifier()
+# rf.fit(train_split, train_split_labels)
+# rf_score = rf.score(test_split, test_split_labels)
+# print "Accuracy of Random Forest classifier: ", rf_score
 
-gnb = GaussianNB()
-gnb.fit(train_split, train_split_labels)
-gnb_score = gnb.score(test_split, test_split_labels)
-print "Accuracy of Gaussian Naive Bayes classifier: ", gnb_score
+# gnb = GaussianNB()
+# gnb.fit(train_split, train_split_labels)
+# gnb_score = gnb.score(test_split, test_split_labels)
+# print "Accuracy of Gaussian Naive Bayes classifier: ", gnb_score
 
 bnb = BernoulliNB()
 bnb.fit(train_split, train_split_labels)
 bnb_score = bnb.score(test_split, test_split_labels)
 print "Accuracy of Bernoulli Naive Bayes classifier: ", bnb_score
 
-knn = KNeighborsClassifier(n_neighbors=5)
-knn.fit(train_split, train_split_labels)
-knn_score = knn.score(test_split, test_split_labels)
-print "Accuracy of K Nearest Neighbors classifier: ", knn_score
+# knn = KNeighborsClassifier(n_neighbors=5)
+# knn.fit(train_split, train_split_labels)
+# knn_score = knn.score(test_split, test_split_labels)
+# print "Accuracy of K Nearest Neighbors classifier: ", knn_score
 
 """
 Train the classifiers with a cross-validated scheme on the whole training set
 """
 
-cv_dt = tree.DecisionTreeClassifier()
-cv_dt_scores = cross_val_score(cv_dt, trainFeatureMatrix, trainLabels, cv=5)
-print("Cross-Validated Accuracy of Decision Tree: %0.2f (+/- %0.2f)" % (cv_dt_scores.mean(), cv_dt_scores.std() * 2))
+# cv_dt = tree.DecisionTreeClassifier()
+# cv_dt_scores = cross_val_score(cv_dt, trainFeatureMatrix, trainLabels, cv=5)
+# print("Cross-Validated Accuracy of Decision Tree: %0.2f (+/- %0.2f)" % (cv_dt_scores.mean(), cv_dt_scores.std() * 2))
 
-cv_rf = RandomForestClassifier()
-cv_rf_scores = cross_val_score(cv_rf, trainFeatureMatrix, trainLabels, cv=5)
-print("Cross-Validated Accuracy of Random Forest: %0.2f (+/- %0.2f)" % (cv_rf_scores.mean(), cv_rf_scores.std() * 2))
+# cv_rf = RandomForestClassifier()
+# cv_rf_scores = cross_val_score(cv_rf, trainFeatureMatrix, trainLabels, cv=5)
+# print("Cross-Validated Accuracy of Random Forest: %0.2f (+/- %0.2f)" % (cv_rf_scores.mean(), cv_rf_scores.std() * 2))
 
-cv_gnb = GaussianNB()
-cv_gnb_scores = cross_val_score(cv_gnb, trainFeatureMatrix, trainLabels, cv=5)
-print("Cross-Validated Accuracy of Gaussian Naive Bayes: %0.2f (+/- %0.2f)" % (cv_gnb_scores.mean(), cv_gnb_scores.std() * 2))
+# cv_gnb = GaussianNB()
+# cv_gnb_scores = cross_val_score(cv_gnb, trainFeatureMatrix, trainLabels, cv=5)
+# print("Cross-Validated Accuracy of Gaussian Naive Bayes: %0.2f (+/- %0.2f)" % (cv_gnb_scores.mean(), cv_gnb_scores.std() * 2))
 
-cv_bnb = BernoulliNB()
-cv_bnb_scores = cross_val_score(cv_bnb, trainFeatureMatrix, trainLabels, cv=5)
-print("Cross-Validated Accuracy of Bernoulli Naive Bayes: %0.2f (+/- %0.2f)" % (cv_bnb_scores.mean(), cv_bnb_scores.std() * 2))
+# cv_bnb = BernoulliNB()
+# cv_bnb_scores = cross_val_score(cv_bnb, trainFeatureMatrix, trainLabels, cv=5)
+# print("Cross-Validated Accuracy of Bernoulli Naive Bayes: %0.2f (+/- %0.2f)" % (cv_bnb_scores.mean(), cv_bnb_scores.std() * 2))
 
-cv_knn = KNeighborsClassifier(n_neighbors=5)
-cv_knn_scores = cross_val_score(cv_knn, trainFeatureMatrix, trainLabels, cv=5)
-print("Cross-Validated Accuracy of K Nearest Neighbors: %0.2f (+/- %0.2f)" % (cv_knn_scores.mean(), cv_knn_scores.std() * 2))
+# cv_knn = KNeighborsClassifier(n_neighbors=5)
+# cv_knn_scores = cross_val_score(cv_knn, trainFeatureMatrix, trainLabels, cv=5)
+# print("Cross-Validated Accuracy of K Nearest Neighbors: %0.2f (+/- %0.2f)" % (cv_knn_scores.mean(), cv_knn_scores.std() * 2))
 
 
 # For now, output the test labels using a Bernoulli Naive Bayes Classifier

@@ -54,7 +54,7 @@ def addTransaction(transactionData, featureMatrix, uniqGenres):
     if year == MISSING_VALUE:
         year = -1
     else:
-        year = int(year)
+        year = normalizeYear(int(year))
 
     # For all possible genres, fill in a 1 if a movie contains that genre
     if genre == MISSING_VALUE:
@@ -81,7 +81,7 @@ def replaceMissingValues(userData, movieData, labelCounts, label):
         occupation = max(labelCounts[label]['occupation'].iteritems(), key=operator.itemgetter(1))[0]
 
     if year == MISSING_VALUE:
-        year = max(labelCounts[label]['year'].iteritems(), key=operator.itemgetter(1))[0]
+        year = normalizeYear(int(max(labelCounts[label]['year'].iteritems(), key=operator.itemgetter(1))[0]))
 
     if genre == MISSING_VALUE:
         genre = max(labelCounts[label]['genre'].iteritems(), key=operator.itemgetter(1))[0]
@@ -129,6 +129,9 @@ def extractDataAndLabels(filename, usersData, moviesData, uniqGenres, labelCount
     else:
         return featureMatrix, testIds
 
+def normalizeYear(year):
+    return float(year - minYear)/float(maxYear - minYear)
+
 """
     Main Function
 """
@@ -136,17 +139,25 @@ def extractDataAndLabels(filename, usersData, moviesData, uniqGenres, labelCount
 # Read the movies file and store a dictionary of the features
 moviesData = {}
 genreSet = set()
+maxYear = 0
+minYear = 9999
 with open('movie.txt', 'r') as movies:
     next(movies)
     for movie in movies:
         movieData = movie.strip('\n').split(',')
         movieID = movieData[0]
+        if movieData[1] != MISSING_VALUE:
+            year = int(movieData[1])
+            if year > maxYear:
+                maxYear = year
+            if year < minYear:
+                minYear = year
         moviesData[movieID] = movieData[1:]
         genreSet.update(movieData[-1].split('|'))
 
 # Read the users file and store a dictionary of the features
 usersData = {}
-with open('user.txt', 'r') as users:
+with open('userOutput.txt', 'r') as users:
     next(users)
     for user in users:
         userData = user.strip('\n').split(',')

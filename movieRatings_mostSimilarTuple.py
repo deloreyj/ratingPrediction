@@ -53,7 +53,7 @@ def addTransaction(transactionData, featureMatrix, uniqGenres):
     if year == MISSING_VALUE:
         year = -1
     else:
-        year = int(year)
+        year = normalizeYear(int(year))
 
     # For all possible genres, fill in a 1 if a movie contains that genre
     if genre == MISSING_VALUE:
@@ -94,30 +94,6 @@ def extractDataAndLabels(filename, usersData, moviesData, uniqGenres):
     else:
         return featureMatrix, testIds
 
-"""
-    Main Function
-"""
-
-# Read the movies file and store a dictionary of the features
-moviesData = {}
-genreSet = set()
-with open('movie.txt', 'r') as movies:
-    next(movies)
-    for movie in movies:
-        movieData = movie.strip('\n').split(',')
-        movieID = movieData[0]
-        moviesData[movieID] = movieData[1:]
-        genreSet.update(movieData[-1].split('|'))
-
-# Read the users file and store a dictionary of the features
-usersData = {}
-with open('user.txt', 'r') as users:
-    next(users)
-    for user in users:
-        userData = user.strip('\n').split(',')
-        userID = userData[0]
-        usersData[userID] = userData[1:]
-
 def computeDistance(list1, list2):
     return (sum([(x - y) ** 2 for x, y in zip(list1, list2)]))**0.5
 
@@ -141,6 +117,41 @@ def closestNeighbor(orig_list, featureMatrix):
             break
 
     return copy.deepcopy(bestMatch)
+
+def normalizeYear(year):
+    return float(year - minYear)/float(maxYear - minYear)
+
+"""
+    Main Function
+"""
+
+# Read the movies file and store a dictionary of the features
+moviesData = {}
+genreSet = set()
+maxYear = 0
+minYear = 9999
+with open('movie.txt', 'r') as movies:
+    next(movies)
+    for movie in movies:
+        movieData = movie.strip('\n').split(',')
+        movieID = movieData[0]
+        if movieData[1] != MISSING_VALUE:
+            year = int(movieData[1])
+            if year > maxYear:
+                maxYear = year
+            if year < minYear:
+                minYear = year
+        moviesData[movieID] = movieData[1:]
+        genreSet.update(movieData[-1].split('|'))
+
+# Read the users file and store a dictionary of the features
+usersData = {}
+with open('user.txt', 'r') as users:
+    next(users)
+    for user in users:
+        userData = user.strip('\n').split(',')
+        userID = userData[0]
+        usersData[userID] = userData[1:]
 
 # Read and store the training and test feature matrices
 trainFeatureMatrix, trainLabels = extractDataAndLabels('train.txt', usersData, moviesData, list(genreSet))
