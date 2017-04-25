@@ -35,7 +35,6 @@ with open('movie.txt', 'r') as movies:
         if movieId > maxMovieId:
             maxMovieId = movieId
 
-# userMovieRatings = [[0 for x in range(maxMovieId)] for y in range(maxUserId)]
 userMovieRatings = np.zeros((maxUserId, maxMovieId))
 
 with open('train.txt', 'r') as trainData:
@@ -52,17 +51,29 @@ n_factors = 100
 userMat = np.random.rand(maxUserId, n_factors)
 movieMat = np.random.rand(n_factors, maxMovieId)
 
+# initialize biases
+userBias = np.zeros(maxUserId)
+movieBias = np.zeros(maxMovieId)
+overallBias = np.mean(userMovieRatings[np.where(userMovieRatings != 0)])
+
 num_steps = 10
 stepLen = 0.01
 lam = 0.05
+userRegularization = 0.01
+movieRegularization = 0.01
 
 nonZero_rows, nonZero_cols = np.nonzero(userMovieRatings)
 
 for step in xrange(num_steps):
     for r, c in zip(nonZero_rows, nonZero_cols):
-        err = userMovieRatings[r, c] - userMat[r, :].dot(movieMat[:, c])
+        predictionBias = overallBias + userBias[r] + movieBias[c]
+        err = userMovieRatings[r, c] - (userMat[r, :].dot(movieMat[:, c]) + predictionBias)
         userMat[r, :] += stepLen * (err * movieMat[:, c] - lam * userMat[r, :])
         movieMat[:, c] += stepLen * (err * userMat[r, :] - lam * movieMat[:, c])
+
+        #update biases
+        userBias[r] += stepLen * (err - userRegularization * userBias[r])
+        movieBias[c] += stepLen * (err - movieRegularization * movieBias[c])
 
     totalErr = 0
     for r, c in zip(nonZero_rows, nonZero_cols):
@@ -78,7 +89,8 @@ with open('test.txt', 'r') as testData:
         transactionData = transaction.strip('\n').split(',')
         movieId = int(transactionData[2]) - 1
         userId = int(transactionData[1]) - 1
-        predLabels.append(int(round(userMat[userId, :].dot(movieMat[:, movieId]))))
+        predictionBias = overallBias + userBias[userId] + movieBias[movieId]
+        predLabels.append(int(round(userMat[userId, :].dot(movieMat[:, movieId]) + predictionBias)))
         testIds.append(transactionData[0])
 
 testOutput = open('testOutput.txt', 'w')
